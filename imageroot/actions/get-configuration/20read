@@ -13,6 +13,7 @@ import os
 import sys
 import json
 import agent
+from wikijs_routes import saved as saved_sites
 from wikijs_auth import callback, domains, providers, read
 
 # Prepare return variable
@@ -23,6 +24,7 @@ config["host"] = os.getenv("TRAEFIK_HOST","")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = agent.get_route(os.environ['MODULE_ID']).get('lets_encrypt', False)
 
+config["sites"] = saved_sites()
 saved = read()
 config["auth"] = {key: saved[key] for key in (
     "ldap_domain", "oidc_mode", "registration", "issuer", "client_id", "provider", "oidc_domain",

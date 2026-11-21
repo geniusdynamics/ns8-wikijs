@@ -94,6 +94,19 @@
                 $t("settings.enabled")
               }}</template>
             </cv-toggle>
+            <h3 class="mg-bottom">{{ $t("settings.sites") }}</h3>
+            <p class="mg-bottom">{{ $t("settings.sites_help") }}</p>
+            <div v-for="(site, index) in sites" :key="index" class="mg-bottom">
+              <NsTextInput v-model.trim="site.host" :label="$t('settings.site_hostname')" :disabled="stillLoading" class="mg-bottom" />
+              <NsCheckbox v-model="site.lets_encrypt" :label="$t('settings.site_certificate')" :disabled="stillLoading" />
+              <NsButton type="button" kind="ghost" :icon="TrashCan20" :disabled="stillLoading" @click="sites.splice(index, 1)">
+                {{ $t("settings.remove_site") }}
+              </NsButton>
+            </div>
+            <NsButton type="button" kind="secondary" :icon="Add20" :disabled="stillLoading || sites.length >= 30"
+              class="mg-bottom" @click="sites.push({ host: '', lets_encrypt: false })">
+              {{ $t("settings.add_site") }}
+            </NsButton>
             <h3 class="mg-bottom">{{ $t("settings.auth_heading") }}</h3>
             <cv-select v-model="auth.ldap_domain" :label="$t('settings.ldap_domain')" :disabled="stillLoading" class="mg-bottom">
               <cv-select-option value="">{{ $t("settings.disabled") }}</cv-select-option>
@@ -221,6 +234,7 @@ export default {
       urlCheckInterval: null,
       host: "",
       auth: { ldap_domain: "", oidc_mode: "off", provider: "", oidc_domain: "", issuer: "", client_id: "", client_secret: "", registration: false, trusted_email: false },
+      sites: [],
       ldapDomains: [],
       oidcProviders: [],
       callbackUrl: "",
@@ -362,6 +376,7 @@ export default {
     getConfigurationCompleted(taskContext, taskResult) {
       const config = taskResult.output;
       this.host = config.host;
+      this.sites = (config.sites || []).map((site) => ({ ...site }));
       const { callback_url, secret_configured, ...saved } = config.auth || {};
       this.auth = { ...this.auth, ...saved, client_secret: "", trusted_email: false };
       this.callbackUrl = callback_url || "";
@@ -445,6 +460,7 @@ export default {
           data: {
             host: this.host,
             auth: { ...this.auth },
+            sites: this.sites.map((site) => ({ ...site })),
             lets_encrypt: this.isLetsEncryptEnabled,
             http2https: this.isHttpToHttpsEnabled,
           },

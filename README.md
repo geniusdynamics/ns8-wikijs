@@ -14,3 +14,9 @@ Complete the Wiki.js setup with the same hostname as the NS8 route before enabli
 Wiki.js matches existing accounts by email. Enable only providers that control the email addresses they return. Make sure a directory account cannot claim the email of a privileged local user. NS8 manages its own strategies on the configured site and preserves local sign-in and other Wiki.js strategies. Clearing a selection unlists and disables its managed strategy while preserving existing users.
 
 For operator-only options, edit `state/wiki.env` in the module environment and restart the Wiki.js application service. For example, `WIKI_OFFLINE=true` disables upstream online features and `WIKI_LOG_LEVEL=warn` changes application logging. Keep secrets out of NS8's shared environment.
+
+## Multiple sites
+
+Create each site in Wiki.js administration and add the same hostname under **Additional Wiki.js site routes** in NS8 Settings. Point its DNS record at NS8 and enable its Let’s Encrypt option if you want NS8 to issue a certificate. All hostnames reach the same instance, and Wiki.js selects the site by hostname. Create and organize pages within their respective Wiki.js sites. Removing a route leaves the site and its content in Wiki.js. NS8-managed authentication strategies apply to the primary hostname. Configure other sites' sign-in policies in Wiki.js.
+
+Restore publishes additional hostnames with certificate requests off. Turn certificate requests on after the DNS records point at the destination node.

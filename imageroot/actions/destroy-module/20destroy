@@ -1,1 +1,5 @@
-# Placeholder, see bug NethServer/dev#7058
+#!/usr/bin/env python3
+from wikijs_routes import delete, saved
+
+for row in saved():
+    delete(row["host"])

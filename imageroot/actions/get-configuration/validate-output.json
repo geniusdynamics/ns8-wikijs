@@ -85,6 +85,28 @@
                     "type": "string"
                 }
             }
+        },
+        "sites": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "host",
+                    "lets_encrypt"
+                ],
+                "properties": {
+                    "host": {
+                        "type": "string",
+                        "format": "hostname",
+                        "pattern": "^[a-zA-Z0-9.-]+\\.[a-zA-Z0-9-]+$"
+                    },
+                    "lets_encrypt": {
+                        "type": "boolean"
+                    }
+                }
+            }
         }
     }
 }

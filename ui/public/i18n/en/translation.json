@@ -55,7 +55,14 @@
     "callback_url": "Callback URL",
     "registration": "Allow directory and OIDC users to create accounts on first sign-in",
     "trusted_email": "I trust these providers to control the email addresses they return.",
-    "auth_setup": "Complete Wiki.js setup before enabling external sign-in. Wiki.js matches external accounts by email. Keep an independent local administrator."
+    "auth_setup": "Complete Wiki.js setup before enabling external sign-in. Wiki.js matches external accounts by email. Keep an independent local administrator.",
+    "sites": "Additional Wiki.js site routes",
+    "sites_help": "Create each site in Wiki.js administration using the same hostname. NS8 publishes the hostname and manages the certificate.",
+    "site_hostname": "Site hostname",
+    "site_certificate": "Request a Let’s Encrypt certificate",
+    "remove_site": "Remove route",
+    "add_site": "Add site route",
+    "invalid_sites": "Check the additional site hostnames."
   },
   "about": {
     "title": "About"

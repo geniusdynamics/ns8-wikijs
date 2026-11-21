@@ -29,6 +29,24 @@ Check if wikijs configuration reads back
     ${config} =    Evaluate    json.loads('''${output}''')    modules=json
     Should Be Equal    ${config}[host]    ${TEST_HOST}
 
+An additional site can be routed and removed
+    ${site}=    Set Variable    docs.wikijs.ns8-ci.test
+    ${id}=    Evaluate    $module_id + "-site-" + hashlib.sha256($site.encode()).hexdigest()[:24]    modules=hashlib
+    ${rc}=    Execute Command
+    ...    api-cli run module/${module_id}/configure-module --data '{"host":"${TEST_HOST}","sites":[{"host":"${site}","lets_encrypt":false}]}'
+    ...    return_rc=True    return_stdout=False
+    Should Be Equal As Integers    ${rc}    0
+    ${route}=    Execute Command    api-cli run module/traefik1/get-route --data '{"instance":"${id}"}'
+    ${config}=    Evaluate    json.loads($route)    modules=json
+    Should Be Equal    ${config}[host]    ${site}
+    ${rc}=    Execute Command
+    ...    api-cli run module/${module_id}/configure-module --data '{"host":"${TEST_HOST}","sites":[]}'
+    ...    return_rc=True    return_stdout=False
+    Should Be Equal As Integers    ${rc}    0
+    ${rc}=    Execute Command    curl -kfsS --resolve ${site}:443:127.0.0.1 https://${site}/ >/dev/null
+    ...    return_rc=True    return_stdout=False
+    Should Not Be Equal As Integers    ${rc}    0
+
 Check if wikijs is removed correctly
     ${rc} =    Execute Command    remove-module --no-preserve ${module_id}
     ...    return_rc=True  return_stdout=False
