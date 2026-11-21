@@ -1,0 +1,33 @@
+#
+# Copyright (C) 2022 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+[Unit]
+Description=Podman  wikijs-app.service
+BindsTo=wikijs.service
+After=wikijs.service postgresql-app.service
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%E/state/environment
+WorkingDirectory=%E/state
+Restart=always
+TimeoutStopSec=70
+ExecStartPre=/bin/rm -f %t/wikijs-app.pid %t/wikijs-app.ctr-id
+ExecStart=/usr/bin/podman run --conmon-pidfile %t/wikijs-app.pid \
+    --cidfile %t/wikijs-app.ctr-id --cgroups=no-conmon \
+    --pod-id-file %t/wikijs.pod-id --replace -d --name  wikijs-app \
+    --volume %E/state/wiki-config.yml:/wiki/config.yml:ro,Z \
+    --volume wiki-content:/wiki/data/content:Z \
+    --volume wiki-repo:/wiki/data/repo:Z \
+    ${WIKI_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/wikijs-app.ctr-id -t 10
+ExecReload=/usr/bin/podman kill -s HUP wikijs-app
+SyslogIdentifier=%u
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/wikijs-app.ctr-id
+PIDFile=%t/wikijs-app.pid
+Type=forking
+
+[Install]
+WantedBy=default.target

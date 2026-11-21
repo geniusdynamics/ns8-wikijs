@@ -1,19 +1,19 @@
 {
-  "name": "kickstart",
+  "name": "Wiki.js",
   "description": {
-    "en": "My kickstart module"
+    "en": "Create documentation and collaborative knowledge bases with Wiki.js."
   },
   "categories": [],
   "authors": [
     {
-      "name": "Name Surname",
-      "email": "author@yourmail.org"
+      "name": "Genius Dynamics",
+      "email": "resources@genius-dynamics.com"
     }
   ],
   "docs": {
-    "documentation_url": "https://docs.kickstart.com/",
-    "bug_url": "https://github.com/NethServer/dev",
-    "code_url": "https://github.com/author/ns8-kickstart"
+    "documentation_url": "https://docs.js.wiki/setup/installation",
+    "bug_url": "https://github.com/geniusdynamics/ns8-wikijs/issues",
+    "code_url": "https://github.com/geniusdynamics/ns8-wikijs"
   },
-  "source": "ghcr.io/nethserver/kickstart"
+  "source": "ghcr.io/geniusdynamics/wikijs"
 }
