@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+import subprocess
+
+from wikijs_auth import read
+
+if read().get("ldap_domain"):
+    subprocess.run(["systemctl", "--user", "--no-block", "try-restart", "wikijs-app.service"], check=True)

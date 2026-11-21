@@ -30,6 +30,71 @@
             "type": "boolean",
             "title": "HTTP to HTTPS redirection",
             "description": "Redirect all the HTTP requests to HTTPS"
+        },
+        "auth": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ldap_domain": {
+                    "type": "string",
+                    "maxLength": 253
+                },
+                "oidc_domain": {
+                    "type": "string",
+                    "maxLength": 253
+                },
+                "provider": {
+                    "type": "string",
+                    "maxLength": 128
+                },
+                "issuer": {
+                    "type": "string",
+                    "maxLength": 2048
+                },
+                "client_id": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "oidc_mode": {
+                    "enum": [
+                        "off",
+                        "ns8",
+                        "manual"
+                    ]
+                },
+                "registration": {
+                    "type": "boolean"
+                },
+                "client_secret": {
+                    "type": "string",
+                    "maxLength": 4096
+                },
+                "trusted_email": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "sites": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "host",
+                    "lets_encrypt"
+                ],
+                "properties": {
+                    "host": {
+                        "type": "string",
+                        "format": "hostname",
+                        "pattern": "^[a-zA-Z0-9.-]+\\.[a-zA-Z0-9-]+$"
+                    },
+                    "lets_encrypt": {
+                        "type": "boolean"
+                    }
+                }
+            }
         }
     }
 }

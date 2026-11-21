@@ -13,7 +13,9 @@ import os
 request = json.load(sys.stdin)
 renv = request['environment']
 
+sites = json.loads(renv.get("WIKI_SITE_ROUTES", "[]"))
 configure_retval = agent.tasks.run(agent_id=os.environ['AGENT_ID'], action='configure-module', data={
+    "sites": [{**site, "lets_encrypt": False} for site in sites],
     "host": renv["TRAEFIK_HOST"],
     "http2https": renv["TRAEFIK_HTTP2HTTPS"] == "True",
 })

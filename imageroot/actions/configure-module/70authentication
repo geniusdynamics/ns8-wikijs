@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+import json
+import sys
+
+from wikijs_auth import configure
+
+try:
+    configure(json.load(sys.stdin))
+except (ValueError, RuntimeError) as error:
+    sys.exit(str(error))
