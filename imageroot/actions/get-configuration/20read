@@ -13,6 +13,7 @@ import os
 import sys
 import json
 import agent
+from wikijs_auth import callback, domains, providers, read
 
 # Prepare return variable
 config = {}
@@ -21,6 +22,16 @@ config = {}
 config["host"] = os.getenv("TRAEFIK_HOST","")
 config["http2https"] = os.getenv("TRAEFIK_HTTP2HTTPS") == "True"
 config["lets_encrypt"] = agent.get_route(os.environ['MODULE_ID']).get('lets_encrypt', False)
+
+saved = read()
+config["auth"] = {key: saved[key] for key in (
+    "ldap_domain", "oidc_mode", "registration", "issuer", "client_id", "provider", "oidc_domain",
+) if key in saved}
+config["auth"]["secret_configured"] = bool(saved.get("client_secret"))
+if saved.get("oidc_id"):
+    config["auth"]["callback_url"] = callback(saved["host"], saved["oidc_id"])
+config["ldap_domains"] = domains()
+config["oidc_providers"] = providers()
 
 # Dump the configuration to stdout
 json.dump(config, fp=sys.stdout)

@@ -31,6 +31,60 @@
             "type": "boolean",
             "title": "HTTP to HTTPS redirection",
             "description": "Redirect all the HTTP requests to HTTPS"
+        },
+        "ldap_domains": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "oidc_providers": {
+            "type": "array",
+            "items": {
+                "type": "object"
+            }
+        },
+        "auth": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "ldap_domain": {
+                    "type": "string",
+                    "maxLength": 253
+                },
+                "oidc_domain": {
+                    "type": "string",
+                    "maxLength": 253
+                },
+                "provider": {
+                    "type": "string",
+                    "maxLength": 128
+                },
+                "issuer": {
+                    "type": "string",
+                    "maxLength": 2048
+                },
+                "client_id": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "oidc_mode": {
+                    "enum": [
+                        "off",
+                        "ns8",
+                        "manual"
+                    ]
+                },
+                "registration": {
+                    "type": "boolean"
+                },
+                "secret_configured": {
+                    "type": "boolean"
+                },
+                "callback_url": {
+                    "type": "string"
+                }
+            }
         }
     }
 }

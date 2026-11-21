@@ -38,7 +38,24 @@
     "instance_configuration": "Configure wikijs",
     "domain_already_used_in_traefik": "Domain already used in traefik",
     "host_pattern": "Must be a valid fully qualified domain name",
-    "host_format": "Must be a valid fully qualified domain name"
+    "host_format": "Must be a valid fully qualified domain name",
+    "auth_heading": "Directory and single sign-on",
+    "ldap_domain": "NS8 LDAP or Active Directory",
+    "oidc_mode": "OpenID Connect",
+    "oidc_ns8": "Choose an NS8 identity provider",
+    "oidc_manual": "Enter an external provider",
+    "oidc_provider": "NS8 identity provider",
+    "oidc_pick": "Select an option",
+    "oidc_domain": "OIDC user domain",
+    "oidc_advanced": "Advanced OIDC settings",
+    "oidc_issuer": "HTTPS issuer URL",
+    "oidc_client_id": "Client ID",
+    "oidc_client_secret": "Client secret",
+    "oidc_saved_secret": "Leave blank to keep the secret for the same client.",
+    "callback_url": "Callback URL",
+    "registration": "Allow directory and OIDC users to create accounts on first sign-in",
+    "trusted_email": "I trust these providers to control the email addresses they return.",
+    "auth_setup": "Complete Wiki.js setup before enabling external sign-in. Wiki.js matches external accounts by email. Keep an independent local administrator."
   },
   "about": {
     "title": "About"

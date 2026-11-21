@@ -1,0 +1,5 @@
+port: 3000
+db:
+  schema: wiki
+offline: $(WIKI_OFFLINE:false)
+logLevel: $(WIKI_LOG_LEVEL:info)
