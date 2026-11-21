@@ -11,9 +11,9 @@ set -e
 # Prepare variables for later use
 images=()
 # The image will be pushed to GitHub container registry
-repobase="${REPOBASE:-ghcr.io/nethserver}"
+repobase="${REPOBASE:-ghcr.io/geniusdynamics}"
 # Configure the image name
-reponame="kickstart"
+reponame="wikijs"
 # Node.js 25+ no longer ships Corepack, install it from npm
 # renovate: datasource=npm packageName=corepack
 corepack_version=0.36.0
@@ -21,18 +21,18 @@ corepack_version=0.36.0
 # Create a new empty container image
 container=$(buildah from scratch)
 
-# Reuse existing nodebuilder-kickstart container, to speed up builds
-if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-kickstart; then
+# Reuse existing nodebuilder-wikijs container, to speed up builds
+if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-wikijs; then
     echo "Pulling NodeJS runtime..."
-    buildah from --name nodebuilder-kickstart -v "${PWD}:/usr/src:Z" docker.io/library/node:26.13.0-slim
-    buildah run nodebuilder-kickstart sh -c "npm install -g corepack@${corepack_version} && corepack enable"
+    buildah from --name nodebuilder-wikijs -v "${PWD}:/usr/src:Z" docker.io/library/node:26.13.0-slim
+    buildah run nodebuilder-wikijs sh -c "npm install -g corepack@${corepack_version} && corepack enable"
 fi
 
 echo "Build static UI files with node..."
 buildah run \
     --workingdir=/usr/src/ui \
     --env="NODE_OPTIONS=--openssl-legacy-provider" \
-    nodebuilder-kickstart \
+    nodebuilder-wikijs \
     sh -c "yarn install && yarn build"
 
 # Add imageroot directory to the container image
@@ -42,7 +42,6 @@ buildah add "${container}" ui/dist /ui
 # Select you image(s) with the label org.nethserver.images
 # ghcr.io/xxxxx is the GitHub container registry or your own registry or docker.io for Docker Hub
 # The image tag is set to latest by default, but can be overridden with the IMAGETAG environment variable
-# --label="org.nethserver.images=docker.io/mariadb:13.0.2 docker.io/roundcube/roundcubemail:1.6.19-apache"
 # rootfull=0 === rootless container
 # tcp-ports-demand=1 number of tcp Port to reserve , 1 is the minimum, can be udp or tcp
 buildah config --entrypoint=/ \
@@ -50,7 +49,7 @@ buildah config --entrypoint=/ \
     --label="org.nethserver.tcp-ports-demand=1" \
     --label="org.nethserver.rootfull=0" \
     --label="org.nethserver.min-core=3.20.1" \
-    --label="org.nethserver.images=docker.io/postgres:17.11-alpine docker.io/nginx:1.31.7-alpine" \
+    --label="org.nethserver.images=docker.io/postgres:17.11-alpine ghcr.io/requarks/wiki:3.5.0" \
     "${container}"
 # Commit the image
 buildah commit "${container}" "${repobase}/${reponame}"
