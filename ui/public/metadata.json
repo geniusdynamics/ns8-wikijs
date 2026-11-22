@@ -1,9 +1,12 @@
 {
   "name": "Wiki.js",
   "description": {
-    "en": "Create documentation and collaborative knowledge bases with Wiki.js."
+    "en": "Wiki.js 3: a modern wiki for documentation and collaborative knowledge bases, with NS8 LDAP and OpenID Connect sign-in."
   },
-  "categories": [],
+  "categories": [
+    "collaboration",
+    "documentation"
+  ],
   "authors": [
     {
       "name": "Genius Dynamics",
@@ -11,7 +14,7 @@
     }
   ],
   "docs": {
-    "documentation_url": "https://docs.js.wiki/setup/installation",
+    "documentation_url": "https://github.com/geniusdynamics/ns8-wikijs#readme",
     "bug_url": "https://github.com/geniusdynamics/ns8-wikijs/issues",
     "code_url": "https://github.com/geniusdynamics/ns8-wikijs"
   },
