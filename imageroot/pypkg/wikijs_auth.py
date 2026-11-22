@@ -83,47 +83,87 @@ def literal(value):
     return "'" + value.replace("'", "''") + "'"
 
 
-def configure(request):
-    old = read()
-    if "auth" not in request:
-        return
+class AuthError(ValueError):
+    """A request the module refuses, with the i18n key the UI shows for it."""
+
+    def __init__(self, key, message):
+        super().__init__(message)
+        self.key = key
+
+
+def validate(request, old=None):
+    """Check the "auth" part of a configure-module request without side effects.
+
+    Return the settings to store, the user domains to bind and the NS8
+    provider endpoint (or None). Raise AuthError on invalid input.
+    """
+    old = read() if old is None else old
     incoming = request["auth"]
     host = request["host"].lower()
     ldap = incoming.get("ldap_domain", "")
     mode = incoming.get("oidc_mode", "off")
     if ldap and ldap not in domains():
-        raise ValueError("Select an available NS8 directory")
+        raise AuthError("auth_ldap_domain_unavailable", "Select an available NS8 directory")
     enabled = bool(ldap or mode != "off")
     if enabled and not incoming.get("trusted_email"):
-        raise ValueError("Confirm that the selected providers control the email addresses they return")
-    if enabled and sql(f"SELECT EXISTS (SELECT 1 FROM wiki.sites WHERE hostname={literal(host)});") != "t":
-        raise ValueError("Complete Wiki.js setup with this hostname before enabling federation")
+        raise AuthError("auth_trusted_email_required",
+                        "Confirm that the selected providers control the email addresses they return")
     result = {"host": host, "ldap_domain": ldap, "oidc_mode": mode,
               "registration": incoming.get("registration", False),
+              "trusted_email": bool(incoming.get("trusted_email")) and enabled,
               "managed_ids": old.get("managed_ids", [])}
     bindings = [ldap] if ldap else []
+    endpoint = None
     if mode == "manual":
         issuer = incoming.get("issuer", "")
         client = incoming.get("client_id", "").strip()
         if not https_url(issuer) or not client:
-            raise ValueError("Enter an HTTPS issuer and a client ID")
+            raise AuthError("auth_manual_oidc_invalid", "Enter an HTTPS issuer and a client ID")
         secret = incoming.get("client_secret") or (
             old.get("client_secret") if (old.get("oidc_mode"), old.get("issuer"), old.get("client_id"))
             == ("manual", issuer, client) else None)
         if not secret:
-            raise ValueError("Enter the client secret for this issuer and client")
+            raise AuthError("auth_client_secret_required", "Enter the client secret for this issuer and client")
         result.update(issuer=issuer, client_id=client, client_secret=secret,
                       oidc_id=strategy_id("manual", issuer, client))
     elif mode == "ns8":
         endpoint = next((p for p in providers() if p["id"] == incoming.get("provider")), None)
         domain = incoming.get("oidc_domain", "")
         if not endpoint or domain not in endpoint["domains"]:
-            raise ValueError("Select an NS8 identity provider and one of its user domains")
+            raise AuthError("auth_ns8_provider_invalid",
+                            "Select an NS8 identity provider and one of its user domains")
         bindings.append(domain)
         result.update(provider=endpoint["id"], oidc_domain=domain, issuer=endpoint["prefix"] + domain,
                       oidc_id=strategy_id("ns8", endpoint["id"], domain))
+    if enabled and sql(f"SELECT EXISTS (SELECT 1 FROM wiki.sites WHERE hostname={literal(host)});") != "t":
+        raise AuthError("auth_wiki_site_missing",
+                        "Complete Wiki.js setup with this hostname before enabling federation")
+    return result, list(dict.fromkeys(bindings)), endpoint
+
+
+def wanted_domains(settings):
+    return [name for name in dict.fromkeys([settings.get("ldap_domain"), settings.get("oidc_domain")]) if name]
+
+
+def rebind():
+    """Bind the user domains stored in auth.json, e.g. after restore or clone."""
+    wanted = wanted_domains(read())
+    if not wanted:
+        return
     bound = agent.get_bound_domain_list(agent.redis_connect())
-    wanted = list(dict.fromkeys(bindings))
+    if not set(wanted) <= set(bound):
+        agent.bind_user_domains(list(dict.fromkeys(bound + wanted)), check=True)
+
+
+def configure(request):
+    if "auth" not in request:
+        return
+    old = read()
+    host = request["host"].lower()
+    result, wanted, endpoint = validate(request, old)
+    mode = result["oidc_mode"]
+    domain = result.get("oidc_domain", "")
+    bound = agent.get_bound_domain_list(agent.redis_connect())
     staged = list(dict.fromkeys(bound + wanted))
     if set(staged) != set(bound) and not agent.bind_user_domains(staged):
         raise ValueError("Could not bind the NS8 user domains")

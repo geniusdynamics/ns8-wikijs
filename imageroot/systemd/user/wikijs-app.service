@@ -4,14 +4,13 @@
 #
 
 [Unit]
-Description=Podman  wikijs-app.service
+Description=Podman wikijs-app.service
 BindsTo=wikijs.service
 After=wikijs.service postgresql-app.service
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 EnvironmentFile=%E/state/environment
-EnvironmentFile=%E/state/database.env
 WorkingDirectory=%E/state
 Restart=always
 TimeoutStopSec=70
@@ -20,9 +19,9 @@ ExecStartPre=/usr/bin/touch %E/state/wiki.env
 ExecStartPre=runagent wikijs-apply-auth
 ExecStart=/usr/bin/podman run --conmon-pidfile %t/wikijs-app.pid \
     --cidfile %t/wikijs-app.ctr-id --cgroups=no-conmon \
-    --pod-id-file %t/wikijs.pod-id --replace -d --name  wikijs-app \
+    --pod-id-file %t/wikijs.pod-id --replace -d --name wikijs-app \
     --volume %E/etc/wiki.yml:/wiki/config.yml:ro,Z \
-    --env DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@127.0.0.1:5432/wikijs \
+    --env-file=%E/state/database.env \
     --env-file=%E/state/wiki.env \
     --volume wiki-content:/wiki/data/content:Z \
     --volume wiki-repo:/wiki/data/repo:Z \

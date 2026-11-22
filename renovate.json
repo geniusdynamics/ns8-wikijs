@@ -2,5 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>NethServer/.github:ns8-automerge"
+  ],
+  "packageRules": [
+    {
+      "description": "A PostgreSQL major upgrade needs a dump and restore of the data directory: keep PostgreSQL 17",
+      "matchPackageNames": ["docker.io/postgres", "postgres"],
+      "allowedVersions": "<18"
+    }
   ]
 }

@@ -28,7 +28,7 @@
               placeholder="wikijs.example.org"
               v-model.trim="host"
               class="mg-bottom"
-              :invalid-message="$t(error.host)"
+              :invalid-message="error.host"
               :disabled="loading.getConfiguration || loading.configureModule"
               ref="host"
             >
@@ -97,43 +97,140 @@
             <h3 class="mg-bottom">{{ $t("settings.sites") }}</h3>
             <p class="mg-bottom">{{ $t("settings.sites_help") }}</p>
             <div v-for="(site, index) in sites" :key="index" class="mg-bottom">
-              <NsTextInput v-model.trim="site.host" :label="$t('settings.site_hostname')" :disabled="stillLoading" class="mg-bottom" />
-              <NsCheckbox v-model="site.lets_encrypt" :label="$t('settings.site_certificate')" :disabled="stillLoading" />
-              <NsButton type="button" kind="ghost" :icon="TrashCan20" :disabled="stillLoading" @click="sites.splice(index, 1)">
+              <NsTextInput
+                v-model.trim="site.host"
+                :label="$t('settings.site_hostname')"
+                :disabled="stillLoading"
+                class="mg-bottom"
+              />
+              <NsCheckbox
+                v-model="site.lets_encrypt"
+                :label="$t('settings.site_certificate')"
+                :disabled="stillLoading"
+              />
+              <NsButton
+                type="button"
+                kind="ghost"
+                :icon="TrashCan20"
+                :disabled="stillLoading"
+                @click="sites.splice(index, 1)"
+              >
                 {{ $t("settings.remove_site") }}
               </NsButton>
             </div>
-            <NsButton type="button" kind="secondary" :icon="Add20" :disabled="stillLoading || sites.length >= 30"
-              class="mg-bottom" @click="sites.push({ host: '', lets_encrypt: false })">
+            <NsButton
+              type="button"
+              kind="secondary"
+              :icon="Add20"
+              :disabled="stillLoading || sites.length >= 30"
+              class="mg-bottom"
+              @click="sites.push({ host: '', lets_encrypt: false })"
+            >
               {{ $t("settings.add_site") }}
             </NsButton>
+            <NsInlineNotification
+              v-if="error.sites"
+              kind="error"
+              :title="$t('settings.sites')"
+              :description="error.sites"
+              :showCloseButton="false"
+            />
             <h3 class="mg-bottom">{{ $t("settings.auth_heading") }}</h3>
-            <cv-select v-model="auth.ldap_domain" :label="$t('settings.ldap_domain')" :disabled="stillLoading" class="mg-bottom">
-              <cv-select-option value="">{{ $t("settings.disabled") }}</cv-select-option>
-              <cv-select-option v-for="name in ldapDomains" :key="name" :value="name">{{ name }}</cv-select-option>
+            <cv-select
+              v-model="auth.ldap_domain"
+              :label="$t('settings.ldap_domain')"
+              :disabled="stillLoading"
+              class="mg-bottom"
+            >
+              <cv-select-option value="">{{
+                $t("settings.disabled")
+              }}</cv-select-option>
+              <cv-select-option
+                v-for="name in ldapDomains"
+                :key="name"
+                :value="name"
+                >{{ name }}</cv-select-option
+              >
             </cv-select>
-            <cv-select v-model="auth.oidc_mode" :label="$t('settings.oidc_mode')" :disabled="stillLoading" class="mg-bottom">
-              <cv-select-option value="off">{{ $t("settings.disabled") }}</cv-select-option>
-              <cv-select-option value="ns8">{{ $t("settings.oidc_ns8") }}</cv-select-option>
-              <cv-select-option value="manual">{{ $t("settings.oidc_manual") }}</cv-select-option>
+            <cv-select
+              v-model="auth.oidc_mode"
+              :label="$t('settings.oidc_mode')"
+              :disabled="stillLoading"
+              class="mg-bottom"
+            >
+              <cv-select-option value="off">{{
+                $t("settings.disabled")
+              }}</cv-select-option>
+              <cv-select-option value="ns8">{{
+                $t("settings.oidc_ns8")
+              }}</cv-select-option>
+              <cv-select-option value="manual">{{
+                $t("settings.oidc_manual")
+              }}</cv-select-option>
             </cv-select>
             <template v-if="auth.oidc_mode === 'ns8'">
-              <cv-select v-model="auth.provider" :label="$t('settings.oidc_provider')" :disabled="stillLoading" @change="auth.oidc_domain = ''" class="mg-bottom">
-                <cv-select-option value="" disabled>{{ $t("settings.oidc_pick") }}</cv-select-option>
-                <cv-select-option v-for="provider in oidcProviders" :key="provider.id" :value="provider.id">{{ provider.label }} ({{ provider.module }})</cv-select-option>
+              <cv-select
+                v-model="auth.provider"
+                :label="$t('settings.oidc_provider')"
+                :disabled="stillLoading"
+                @change="auth.oidc_domain = ''"
+                class="mg-bottom"
+              >
+                <cv-select-option value="" disabled>{{
+                  $t("settings.oidc_pick")
+                }}</cv-select-option>
+                <cv-select-option
+                  v-for="provider in oidcProviders"
+                  :key="provider.id"
+                  :value="provider.id"
+                  >{{ provider.label }} ({{
+                    provider.module
+                  }})</cv-select-option
+                >
               </cv-select>
-              <cv-select v-model="auth.oidc_domain" :label="$t('settings.oidc_domain')" :disabled="stillLoading" class="mg-bottom">
-                <cv-select-option value="" disabled>{{ $t("settings.oidc_pick") }}</cv-select-option>
-                <cv-select-option v-for="name in oidcDomains" :key="name" :value="name">{{ name }}</cv-select-option>
+              <cv-select
+                v-model="auth.oidc_domain"
+                :label="$t('settings.oidc_domain')"
+                :disabled="stillLoading"
+                class="mg-bottom"
+              >
+                <cv-select-option value="" disabled>{{
+                  $t("settings.oidc_pick")
+                }}</cv-select-option>
+                <cv-select-option
+                  v-for="name in oidcDomains"
+                  :key="name"
+                  :value="name"
+                  >{{ name }}</cv-select-option
+                >
               </cv-select>
             </template>
             <cv-accordion v-if="auth.oidc_mode === 'manual'" class="mg-bottom">
               <cv-accordion-item :open="true">
                 <template #title>{{ $t("settings.oidc_advanced") }}</template>
                 <template #content>
-                  <NsTextInput v-model.trim="auth.issuer" :label="$t('settings.oidc_issuer')" :disabled="stillLoading" class="mg-bottom" />
-                  <NsTextInput v-model.trim="auth.client_id" :label="$t('settings.oidc_client_id')" :disabled="stillLoading" class="mg-bottom" />
-                  <NsTextInput v-model="auth.client_secret" type="password" :label="$t('settings.oidc_client_secret')" :disabled="stillLoading" :helper-text="secretConfigured ? $t('settings.oidc_saved_secret') : ''" autocomplete="new-password" />
+                  <NsTextInput
+                    v-model.trim="auth.issuer"
+                    :label="$t('settings.oidc_issuer')"
+                    :disabled="stillLoading"
+                    class="mg-bottom"
+                  />
+                  <NsTextInput
+                    v-model.trim="auth.client_id"
+                    :label="$t('settings.oidc_client_id')"
+                    :disabled="stillLoading"
+                    class="mg-bottom"
+                  />
+                  <NsTextInput
+                    v-model="auth.client_secret"
+                    type="password"
+                    :label="$t('settings.oidc_client_secret')"
+                    :disabled="stillLoading"
+                    :helper-text="
+                      clientSecretSet ? $t('settings.oidc_saved_secret') : ''
+                    "
+                    autocomplete="new-password"
+                  />
                 </template>
               </cv-accordion-item>
             </cv-accordion>
@@ -141,10 +238,27 @@
               {{ $t("settings.callback_url") }} <code>{{ callbackUrl }}</code>
             </p>
             <template v-if="auth.ldap_domain || auth.oidc_mode !== 'off'">
-              <NsCheckbox v-model="auth.registration" :label="$t('settings.registration')" :disabled="stillLoading" class="mg-bottom" />
-              <NsCheckbox v-model="auth.trusted_email" :label="$t('settings.trusted_email')" :disabled="stillLoading" class="mg-bottom" />
+              <NsCheckbox
+                v-model="auth.registration"
+                :label="$t('settings.registration')"
+                :disabled="stillLoading"
+                class="mg-bottom"
+              />
+              <NsCheckbox
+                v-model="auth.trusted_email"
+                :label="$t('settings.trusted_email')"
+                :disabled="stillLoading"
+                class="mg-bottom"
+              />
               <p class="mg-bottom">{{ $t("settings.auth_setup") }}</p>
             </template>
+            <NsInlineNotification
+              v-if="error.auth"
+              kind="error"
+              :title="$t('settings.auth_heading')"
+              :description="error.auth"
+              :showCloseButton="false"
+            />
             <cv-row v-if="error.configureModule">
               <cv-column>
                 <NsInlineNotification
@@ -233,12 +347,22 @@ export default {
       validationErrorDetails: [],
       urlCheckInterval: null,
       host: "",
-      auth: { ldap_domain: "", oidc_mode: "off", provider: "", oidc_domain: "", issuer: "", client_id: "", client_secret: "", registration: false, trusted_email: false },
+      auth: {
+        ldap_domain: "",
+        oidc_mode: "off",
+        provider: "",
+        oidc_domain: "",
+        issuer: "",
+        client_id: "",
+        client_secret: "",
+        registration: false,
+        trusted_email: false,
+      },
       sites: [],
       ldapDomains: [],
       oidcProviders: [],
       callbackUrl: "",
-      secretConfigured: false,
+      clientSecretSet: false,
       isLetsEncryptEnabled: false,
       isLetsEncryptCurrentlyEnabled: false,
       isHttpToHttpsEnabled: true,
@@ -253,13 +377,17 @@ export default {
         host: "",
         lets_encrypt: "",
         http2https: "",
-        getStatus: false,
+        sites: "",
+        auth: "",
+        getStatus: "",
       },
     };
   },
   computed: {
     oidcDomains() {
-      const selected = this.oidcProviders.find((provider) => provider.id === this.auth.provider);
+      const selected = this.oidcProviders.find(
+        (provider) => provider.id === this.auth.provider
+      );
       return selected ? selected.domains : [];
     },
     ...mapState(["instanceName", "core", "appName"]),
@@ -377,10 +505,15 @@ export default {
       const config = taskResult.output;
       this.host = config.host;
       this.sites = (config.sites || []).map((site) => ({ ...site }));
-      const { callback_url, secret_configured, ...saved } = config.auth || {};
-      this.auth = { ...this.auth, ...saved, client_secret: "", trusted_email: false };
+      const { callback_url, client_secret_set, ...saved } = config.auth || {};
+      this.auth = {
+        ...this.auth,
+        trusted_email: false,
+        ...saved,
+        client_secret: "",
+      };
       this.callbackUrl = callback_url || "";
-      this.secretConfigured = Boolean(secret_configured);
+      this.clientSecretSet = Boolean(client_secret_set);
       this.ldapDomains = config.ldap_domains || [];
       this.oidcProviders = config.oidc_providers || [];
       this.isLetsEncryptEnabled = config.lets_encrypt;
@@ -396,7 +529,7 @@ export default {
 
       let isValidationOk = true;
       if (!this.host) {
-        this.error.host = "common.required";
+        this.error.host = this.$t("common.required");
 
         if (isValidationOk) {
           this.focusElement("host");
@@ -410,7 +543,12 @@ export default {
       let focusAlreadySet = false;
       for (const validationError of validationErrors) {
         const param = validationError.parameter;
-        if (validationError.details) {
+        if (param === "sites" || param === "auth") {
+          this.error[param] = this.$t("settings." + validationError.error);
+          if (validationError.details) {
+            this.error[param] += " " + validationError.details;
+          }
+        } else if (validationError.details) {
           // show inline error notification with details
           this.validationErrorDetails = validationError.details
             .split("\n")
@@ -426,8 +564,6 @@ export default {
       }
     },
     async configureModule() {
-      this.error.test_imap = false;
-      this.error.test_smtp = false;
       const isValidationOk = this.validateConfigureModule();
       if (!isValidationOk) {
         return;

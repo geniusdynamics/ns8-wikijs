@@ -49,7 +49,7 @@ buildah config --entrypoint=/ \
     --label="org.nethserver.tcp-ports-demand=1" \
     --label="org.nethserver.rootfull=0" \
     --label="org.nethserver.min-core=3.20.1" \
-    --label="org.nethserver.images=docker.io/postgres:17.11-alpine ghcr.io/requarks/wiki:3.5.0" \
+    --label="org.nethserver.images=docker.io/postgres:17.12-alpine ghcr.io/requarks/wiki:3.5.0" \
     "${container}"
 # Commit the image
 buildah commit "${container}" "${repobase}/${reponame}"

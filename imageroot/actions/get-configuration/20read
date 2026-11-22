@@ -27,9 +27,10 @@ config["lets_encrypt"] = agent.get_route(os.environ['MODULE_ID']).get('lets_encr
 config["sites"] = saved_sites()
 saved = read()
 config["auth"] = {key: saved[key] for key in (
-    "ldap_domain", "oidc_mode", "registration", "issuer", "client_id", "provider", "oidc_domain",
+    "ldap_domain", "oidc_mode", "registration", "trusted_email", "issuer", "client_id", "provider",
+    "oidc_domain",
 ) if key in saved}
-config["auth"]["secret_configured"] = bool(saved.get("client_secret"))
+config["auth"]["client_secret_set"] = bool(saved.get("client_secret"))
 if saved.get("oidc_id"):
     config["auth"]["callback_url"] = callback(saved["host"], saved["oidc_id"])
 config["ldap_domains"] = domains()

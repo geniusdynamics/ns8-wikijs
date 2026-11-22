@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Get wikijs settings",
-    "$id": "http://nethserver.org/json-schema/task/input/wikijs/get-configuration",
+    "$id": "http://nethserver.org/json-schema/task/output/wikijs/get-configuration",
     "description": "Get wikijs settings",
     "examples": [
         {
@@ -20,7 +20,7 @@
         "host": {
             "type": "string",
             "description": "Host name for the application, like 'wikijs.domain.org'",
-            "format": "idn-hostname"
+            "format": "hostname"
         },
         "lets_encrypt": {
             "type": "boolean",
@@ -78,11 +78,15 @@
                 "registration": {
                     "type": "boolean"
                 },
-                "secret_configured": {
-                    "type": "boolean"
-                },
                 "callback_url": {
                     "type": "string"
+                },
+                "client_secret_set": {
+                    "type": "boolean",
+                    "description": "True when a client secret is stored. The secret itself is never returned."
+                },
+                "trusted_email": {
+                    "type": "boolean"
                 }
             }
         },
