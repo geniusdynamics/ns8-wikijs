@@ -157,7 +157,7 @@ Selecting the user domain enables a working LDAP sign-in
     Should Be Equal As Integers    ${rc}    0
     ${bound} =    Execute Command    redis-cli HGET cluster/module_domains ${module_id}
     Should Contain    ${bound}    ${LDAP_DOMAIN}
-    ${ldap} =    Wiki SQL    SELECT id FROM wiki.authentication WHERE module='ldap' AND "isEnabled"
+    ${ldap} =    Wiki SQL    SELECT id FROM wiki.authentication a WHERE module='ldap' AND (to_jsonb(a)->>'isEnabled')::boolean
     Should Not Be Empty    ${ldap}
     ${listed} =    Wiki SQL    SELECT count(*) FROM wiki.sites, jsonb_array_elements(config->'authStrategies') e WHERE e->>'id'='${ldap}'
     Should Be Equal    ${listed}    1
@@ -172,8 +172,8 @@ Clearing the user domain disables the LDAP sign-in
     ...    api-cli run module/${module_id}/configure-module --data '{"host":"${TEST_HOST}","http2https":false,"lets_encrypt":false,"auth":{"ldap_domain":"","oidc_mode":"off"}}'
     ...    return_rc=True    return_stdout=False
     Should Be Equal As Integers    ${rc}    0
-    ${enabled} =    Wiki SQL    SELECT "isEnabled" FROM wiki.authentication WHERE id='${ldap_strategy}'
-    Should Be Equal    ${enabled}    f
+    ${enabled} =    Wiki SQL    SELECT to_jsonb(a)->>'isEnabled' FROM wiki.authentication a WHERE id='${ldap_strategy}'
+    Should Be Equal    ${enabled}    false
     ${login} =    Wiki Login    ${ldap_strategy}    ${LDAP_USER}    ${LDAP_PASSWORD}
     Should Not Contain    ${login}    "ok":true
     ${bound} =    Execute Command    redis-cli HGET cluster/module_domains ${module_id}
