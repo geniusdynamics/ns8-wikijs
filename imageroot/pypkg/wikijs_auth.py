@@ -13,6 +13,9 @@ import agent.tasks
 from agent.ldapproxy import Ldapproxy
 
 PATH = Path("auth.json")
+# Set when the settings could not be written to the Wiki.js database yet,
+# e.g. before Wiki.js initialized it on its first start
+PENDING = Path("auth.pending")
 
 
 def read():
@@ -135,9 +138,6 @@ def validate(request, old=None):
         bindings.append(domain)
         result.update(provider=endpoint["id"], oidc_domain=domain, issuer=endpoint["prefix"] + domain,
                       oidc_id=strategy_id("ns8", endpoint["id"], domain))
-    if enabled and sql(f"SELECT EXISTS (SELECT 1 FROM wiki.sites WHERE hostname={literal(host)});") != "t":
-        raise AuthError("auth_wiki_site_missing",
-                        "Complete Wiki.js setup with this hostname before enabling federation")
     return result, list(dict.fromkeys(bindings)), endpoint
 
 
@@ -189,23 +189,61 @@ def configure(request):
         agent.bind_user_domains(final, check=True)
 
 
+def site_filter(host):
+    """The Wiki.js site that serves the NS8 hostname.
+
+    A site whose hostname is the NS8 hostname, otherwise the default catch-all
+    site ("*") that Wiki.js 3 creates on its first start and that answers any
+    hostname without a site of its own.
+    """
+    return (f"(hostname={literal(host)} OR (hostname='*' AND NOT EXISTS "
+            f"(SELECT 1 FROM wiki.sites WHERE hostname={literal(host)})))")
+
+
+def database_ready():
+    return sql("SELECT to_regclass('wiki.authentication') IS NOT NULL "
+               "AND to_regclass('wiki.sites') IS NOT NULL;") == "t"
+
+
+def ldap_strategy(entry):
+    """Wiki.js 3 LDAP strategy config for an NS8 user domain, reached through ldapproxy.
+
+    The unique ID must be a text attribute: Wiki.js reads attributes as UTF-8
+    strings, so the binary AD objectGUID would be garbled, and the operational
+    OpenLDAP entryUUID is not returned by the "*" attribute search Wiki.js runs.
+    """
+    if entry["schema"] == "ad":
+        search = "(&(objectClass=user)(objectCategory=person)(sAMAccountName={{username}}))"
+        uid, name = "sAMAccountName", "displayName"
+    else:
+        search = "(&(objectClass=posixAccount)(uid={{username}}))"
+        uid, name = "uid", "cn"
+    # ldapproxy listens in clear text on the node loopback, reached from the pod
+    # as "accountprovider"; it speaks TLS to the remote account provider itself.
+    return {
+        "url": f"ldap://accountprovider:{int(entry['port'])}", "searchBase": entry["base_dn"],
+        "bindDn": entry["bind_dn"], "bindCredentials": entry["bind_password"],
+        "searchFilter": search, "tlsEnabled": False, "verifyTLSCertificate": True,
+        "mappingUID": uid, "mappingEmail": "mail", "mappingDisplayName": name, "mapGroups": False,
+    }
+
+
 def apply():
     settings = read()
     if not settings:
+        PENDING.unlink(missing_ok=True)
+        return
+    if not database_ready():
+        # Wiki.js creates its tables on the first start: configure-module
+        # restarts it once they exist, and this runs again.
+        PENDING.touch()
         return
     desired = {}
     domain = settings["ldap_domain"]
     if domain:
         entry = Ldapproxy().get_domain(domain)
         if entry and entry.get("schema") in ("ad", "rfc2307"):
-            ad = entry["schema"] == "ad"
-            desired[strategy_id("ldap", domain)] = ("ldap", "NS8 LDAP", {
-                "url": f"ldap://accountprovider:{int(entry['port'])}", "searchBase": entry["base_dn"],
-                "bindDn": entry["bind_dn"], "bindCredentials": entry["bind_password"],
-                "searchFilter": "(sAMAccountName={{username}})" if ad else "(uid={{username}})",
-                "mappingUID": "objectGUID" if ad else "entryUUID",
-                "mappingEmail": "mail", "mappingDisplayName": "cn", "mapGroups": False,
-            })
+            desired[strategy_id("ldap", domain)] = ("ldap", f"NS8 LDAP ({domain})", ldap_strategy(entry))
     if settings["oidc_mode"] != "off":
         desired[settings["oidc_id"]] = ("oidc", "NS8 OpenID Connect", {
             "issuer": settings["issuer"], "clientId": settings["client_id"],
@@ -215,6 +253,7 @@ def apply():
         })
     ids = sorted(set(settings.get("managed_ids", [])) | set(desired))
     if not ids:
+        PENDING.unlink(missing_ok=True)
         return
     keys = ",".join(map(literal, ids))
     statements = ["BEGIN;", "SET LOCAL standard_conforming_strings=on;",
@@ -229,14 +268,14 @@ def apply():
         statements.append(f'''INSERT INTO wiki.authentication (id,module,"displayName","isEnabled",registration,config)
             VALUES ({literal(identifier)},{literal(module)},{literal(name)},true,
                     {str(settings["registration"]).lower()},{literal(json.dumps(config))}::jsonb)
-            ON CONFLICT (id) DO UPDATE SET "isEnabled"=true,
+            ON CONFLICT (id) DO UPDATE SET "isEnabled"=true, "displayName"=excluded."displayName",
               registration=excluded.registration, config=excluded.config;''')
     if desired:
         links = [{"id": identifier, "order": 100 + index, "isVisible": True}
                  for index, identifier in enumerate(desired)]
         statements.append(f"""UPDATE wiki.sites SET config=jsonb_set(config,'{{authStrategies}}',
              COALESCE(config->'authStrategies','[]') || {literal(json.dumps(links))}::jsonb)
-             WHERE hostname={literal(settings['host'])};""")
+             WHERE {site_filter(settings['host'])};""")
         if settings["oidc_mode"] != "off":
             statements.append("""UPDATE wiki.settings SET value=jsonb_set(value,
                 CASE WHEN value ? 'v' THEN '{v,trustProxy}'::text[] ELSE '{trustProxy}'::text[] END,
@@ -244,3 +283,4 @@ def apply():
     settings["managed_ids"] = ids
     write(settings)
     sql("\n".join(statements + ["COMMIT;"]))
+    PENDING.unlink(missing_ok=True)

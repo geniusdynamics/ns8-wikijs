@@ -12,10 +12,18 @@ NS8 Traefik publishes the site over HTTPS.
 Set the hostname, Let's Encrypt and HTTP to HTTPS redirection in the module
 Settings page, or from the command line:
 
-    api-cli run module/wikijs1/configure-module --data '{"host":"wiki.example.org","lets_encrypt":true,"http2https":true}'
+    api-cli run module/wikijs1/configure-module --data '{"host":"wiki.example.org","lets_encrypt":true,"http2https":true,"admin_email":"admin@example.org","admin_password":"a-long-secret-password"}'
 
-Then open `https://wiki.example.org` and complete the Wiki.js setup to create a
-local administrator.
+Wiki.js 3 has no setup wizard. Set the administrator email and password
+(at least 12 characters) in Settings or with `admin_email` and
+`admin_password`: the module creates the Wiki.js administrator with them and
+you sign in at `https://wiki.example.org/login`. The password is write-only:
+it is stored in `state/admin.env` (mode `0600`), never passed on a command
+line or to the container configuration, and `get-configuration` returns only
+`admin_password_set`. Send a new `admin_password` later to reset the password
+of the same account. Without these settings Wiki.js creates
+`admin@example.com` with the password `12345678`, which must be changed at
+the first sign-in.
 
 For operator-only options, edit `state/wiki.env` in the module environment
 (`runagent -m wikijs1`) and restart the application with
@@ -25,10 +33,13 @@ For operator-only options, edit `state/wiki.env` in the module environment
 
 ## NS8 directory and OIDC sign-in
 
-Complete the Wiki.js setup with the same hostname as the NS8 route before
-enabling external sign-in in Settings. You can:
+NS8 adds its sign-in strategies to the Wiki.js site whose hostname is the NS8
+hostname, or to the default site (`*`) when no site has that hostname. You can:
 
-- select an NS8 OpenLDAP or Samba AD user domain;
+- select an NS8 OpenLDAP or Samba AD user domain: Wiki.js signs users in
+  through the node's LDAP proxy with the domain's bind account, by `uid`
+  (OpenLDAP) or `sAMAccountName` (Active Directory). Users need a `mail`
+  attribute;
 - choose an NS8 identity provider and one of its user domains: the module
   registers itself as an OIDC client with that provider;
 - or enter an external HTTPS issuer, a client ID and a client secret. Register
@@ -46,7 +57,7 @@ administrator. NS8 manages only its own strategies on the primary site and
 preserves local sign-in and other Wiki.js strategies. Clearing a selection
 unlists and disables its managed strategy and keeps existing users.
 
-Secrets (database password, OIDC client secret) are stored in `0600` files in
+Secrets (database password, administrator password, OIDC client secret) are stored in `0600` files in
 the module state directory. They are never returned by `get-configuration`.
 
 ## Multiple sites
@@ -62,7 +73,7 @@ NS8-managed sign-in strategies apply to the primary hostname only.
 
 The NS8 backup includes a PostgreSQL dump (`wikijs.pg_dump`, created by
 `module-dump-state` and removed after the backup), the database password, the
-authentication settings, `state/wiki.env` and the `wiki-content` and
+administrator credentials, the authentication settings, `state/wiki.env` and the `wiki-content` and
 `wiki-repo` volumes.
 
 Restore loads the dump into a new database, binds the user domains used by
@@ -76,8 +87,9 @@ sign-in settings again to register the new module.
 
 - Logs: `journalctl _UID=$(id -u wikijs1)`, or `runagent -m wikijs1 podman logs wikijs-app`.
 - Services: `runagent -m wikijs1 systemctl --user status wikijs postgresql-app wikijs-app`.
-- "Complete the Wiki.js setup with this hostname": open the site, finish the
-  setup, and make sure the Wiki.js site hostname equals the NS8 hostname.
+- LDAP sign-in: enable **Admin > Flags > Auth Debug** in Wiki.js to
+  log why a directory login fails. An unknown user needs automatic
+  registration enabled.
 - LDAP sign-in fails: the user needs a `mail` attribute, Wiki.js matches
   accounts by email.
 
