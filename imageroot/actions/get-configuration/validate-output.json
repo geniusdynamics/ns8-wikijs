@@ -111,6 +111,13 @@
                     }
                 }
             }
+        },
+        "admin_email": {
+            "type": "string"
+        },
+        "admin_password_set": {
+            "type": "boolean",
+            "description": "True when an administrator password is stored. The password itself is never returned."
         }
     }
 }

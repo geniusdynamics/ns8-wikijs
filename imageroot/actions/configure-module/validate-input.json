@@ -7,7 +7,9 @@
         {
             "host": "wikijs.domain.org",
             "http2https": true,
-            "lets_encrypt": true
+            "lets_encrypt": true,
+            "admin_email": "admin@domain.org",
+            "admin_password": "a-long-secret-password"
         }
     ],
     "type": "object",
@@ -95,6 +97,18 @@
                     }
                 }
             }
+        },
+        "admin_email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "description": "Email of the Wiki.js administrator account. Wiki.js creates it on its first start; later changes update the existing account."
+        },
+        "admin_password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 72,
+            "description": "Write-only password of the Wiki.js administrator account. Stored in a 0600 file, never returned. Empty or missing keeps the current password."
         }
     }
 }

@@ -55,7 +55,7 @@
     "callback_url": "Callback URL",
     "registration": "Allow directory and OIDC users to create accounts on first sign-in",
     "trusted_email": "I trust these providers to control the email addresses they return.",
-    "auth_setup": "Complete Wiki.js setup before enabling external sign-in. Wiki.js matches external accounts by email. Keep an independent local administrator.",
+    "auth_setup": "Wiki.js matches external accounts by email. Keep an independent local administrator.",
     "sites": "Additional Wiki.js site routes",
     "sites_help": "Create each site in Wiki.js administration using the same hostname. NS8 publishes the hostname and manages the certificate.",
     "site_hostname": "Site hostname",
@@ -68,7 +68,17 @@
     "auth_manual_oidc_invalid": "Enter an HTTPS issuer URL and a client ID.",
     "auth_client_secret_required": "Enter the client secret for this issuer and client.",
     "auth_ns8_provider_invalid": "Select an NS8 identity provider and one of its user domains.",
-    "auth_wiki_site_missing": "Complete the Wiki.js setup with this hostname, and make sure Wiki.js is running, before enabling external sign-in."
+    "auth_wiki_site_missing": "The Wiki.js database is not reachable. Make sure Wiki.js is running and try again.",
+    "admin_heading": "Wiki.js administrator",
+    "admin_help": "Wiki.js creates this administrator account on its first start. Changing the email or password later updates the same account.",
+    "admin_email": "Administrator email",
+    "admin_password": "Administrator password",
+    "admin_password_help": "At least 12 characters.",
+    "admin_password_saved": "A password is stored. Leave blank to keep it, or type a new one to reset it.",
+    "admin_email_invalid": "Enter a valid email address.",
+    "admin_password_length": "The password must be 12 to 72 characters long.",
+    "admin_password_invalid": "The password cannot contain control characters.",
+    "admin_password_required": "Enter the administrator password."
   },
   "about": {
     "title": "About"
