@@ -28,14 +28,14 @@
     "title": "Settings",
     "configure_instance": "Configure {instance}",
     "save": "Save",
-    "wikijs_fqdn": "wikijs hostname (FQDN)",
+    "wikijs_fqdn": "Wiki.js hostname (FQDN)",
     "lets_encrypt": "Request LE Certificate",
     "http_to_https": "Force HTTPS",
     "enabled": "Enabled",
     "disabled": "Disabled",
     "advanced": "Advanced",
     "configuring": "Configuring",
-    "instance_configuration": "Configure wikijs",
+    "instance_configuration": "Configure Wiki.js",
     "domain_already_used_in_traefik": "Domain already used in traefik",
     "host_pattern": "Must be a valid fully qualified domain name",
     "host_format": "Must be a valid fully qualified domain name",
@@ -62,7 +62,13 @@
     "site_certificate": "Request a Let’s Encrypt certificate",
     "remove_site": "Remove route",
     "add_site": "Add site route",
-    "invalid_sites": "Check the additional site hostnames."
+    "invalid_sites": "Check the additional site hostnames.",
+    "auth_ldap_domain_unavailable": "The selected NS8 user domain is not available.",
+    "auth_trusted_email_required": "Confirm that you trust the selected providers to control the email addresses they return.",
+    "auth_manual_oidc_invalid": "Enter an HTTPS issuer URL and a client ID.",
+    "auth_client_secret_required": "Enter the client secret for this issuer and client.",
+    "auth_ns8_provider_invalid": "Select an NS8 identity provider and one of its user domains.",
+    "auth_wiki_site_missing": "Complete the Wiki.js setup with this hostname, and make sure Wiki.js is running, before enabling external sign-in."
   },
   "about": {
     "title": "About"

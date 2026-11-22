@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2026 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Validate the authentication settings before any route or binding changes,
+# so the UI can show the error next to the authentication fields.
+
+import json
+import sys
+
+import agent
+from wikijs_auth import AuthError, validate
+
+agent.set_weight(__file__.rsplit("/", 1)[-1], 0)
+
+request = json.load(sys.stdin)
+if "auth" not in request:
+    sys.exit(0)
+
+try:
+    validate(request)
+except AuthError as error:
+    agent.set_status("validation-failed")
+    json.dump([{"field": "auth", "parameter": "auth", "value": "", "error": error.key}], sys.stdout)
+    sys.exit(4)
+except RuntimeError:
+    # The database is not reachable or Wiki.js setup is not complete yet
+    agent.set_status("validation-failed")
+    json.dump([{"field": "auth", "parameter": "auth", "value": "", "error": "auth_wiki_site_missing"}],
+              sys.stdout)
+    sys.exit(4)

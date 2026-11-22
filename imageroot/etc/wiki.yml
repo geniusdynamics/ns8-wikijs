@@ -1,5 +1,12 @@
 port: 3000
 db:
+  host: 127.0.0.1
+  port: 5432
+  user: postgres
+  # Read from state/database.env, passed with --env-file: never on the command line
+  pass: '$(POSTGRES_PASSWORD)'
+  db: wikijs
   schema: wiki
+  ssl: false
 offline: $(WIKI_OFFLINE:false)
 logLevel: $(WIKI_LOG_LEVEL:info)
