@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# ExecStartPre of wikijs-app:
+# - write the container env file for the first administrator;
+# - write the NS8 sign-in strategies to the Wiki.js database.
+# A failure of the latter is logged and does not stop Wiki.js from starting.
+
+import sys
+
+import agent
+from wikijs_admin import write_init
 from wikijs_auth import apply
 
-apply()
+write_init()
+try:
+    apply()
+except Exception as error:  # never print SQL: it carries bind passwords and secrets
+    print(agent.SD_WARNING + f"NS8 sign-in strategies not applied: {type(error).__name__}: {error}",
+          file=sys.stderr)

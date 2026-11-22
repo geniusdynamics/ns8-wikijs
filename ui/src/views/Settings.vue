@@ -94,6 +94,33 @@
                 $t("settings.enabled")
               }}</template>
             </cv-toggle>
+            <h3 class="mg-bottom">{{ $t("settings.admin_heading") }}</h3>
+            <p class="mg-bottom">{{ $t("settings.admin_help") }}</p>
+            <NsTextInput
+              v-model.trim="adminEmail"
+              :label="$t('settings.admin_email')"
+              placeholder="admin@example.org"
+              :invalid-message="error.admin_email"
+              :disabled="stillLoading"
+              autocomplete="off"
+              class="mg-bottom"
+              ref="admin_email"
+            />
+            <NsTextInput
+              v-model="adminPassword"
+              type="password"
+              :label="$t('settings.admin_password')"
+              :invalid-message="error.admin_password"
+              :helper-text="
+                adminPasswordSet
+                  ? $t('settings.admin_password_saved')
+                  : $t('settings.admin_password_help')
+              "
+              :disabled="stillLoading"
+              autocomplete="new-password"
+              class="mg-bottom"
+              ref="admin_password"
+            />
             <h3 class="mg-bottom">{{ $t("settings.sites") }}</h3>
             <p class="mg-bottom">{{ $t("settings.sites_help") }}</p>
             <div v-for="(site, index) in sites" :key="index" class="mg-bottom">
@@ -347,6 +374,9 @@ export default {
       validationErrorDetails: [],
       urlCheckInterval: null,
       host: "",
+      adminEmail: "",
+      adminPassword: "",
+      adminPasswordSet: false,
       auth: {
         ldap_domain: "",
         oidc_mode: "off",
@@ -379,6 +409,8 @@ export default {
         http2https: "",
         sites: "",
         auth: "",
+        admin_email: "",
+        admin_password: "",
         getStatus: "",
       },
     };
@@ -505,6 +537,9 @@ export default {
       const config = taskResult.output;
       this.host = config.host;
       this.sites = (config.sites || []).map((site) => ({ ...site }));
+      this.adminEmail = config.admin_email || "";
+      this.adminPassword = "";
+      this.adminPasswordSet = Boolean(config.admin_password_set);
       const { callback_url, client_secret_set, ...saved } = config.auth || {};
       this.auth = {
         ...this.auth,
@@ -533,6 +568,20 @@ export default {
 
         if (isValidationOk) {
           this.focusElement("host");
+        }
+        isValidationOk = false;
+      }
+      if (this.adminPassword && this.adminPassword.length < 12) {
+        this.error.admin_password = this.$t("settings.admin_password_length");
+        if (isValidationOk) {
+          this.focusElement("admin_password");
+        }
+        isValidationOk = false;
+      }
+      if (this.adminEmail && !this.adminPassword && !this.adminPasswordSet) {
+        this.error.admin_password = this.$t("settings.admin_password_required");
+        if (isValidationOk) {
+          this.focusElement("admin_password");
         }
         isValidationOk = false;
       }
@@ -571,6 +620,14 @@ export default {
 
       this.loading.configureModule = true;
       const taskAction = "configure-module";
+      const adminData = {};
+      if (this.adminEmail) {
+        adminData.admin_email = this.adminEmail;
+      }
+      if (this.adminPassword) {
+        // write-only: sent only when the administrator types a new one
+        adminData.admin_password = this.adminPassword;
+      }
       const eventId = this.getUuid();
 
       // register to task error
@@ -599,6 +656,7 @@ export default {
             sites: this.sites.map((site) => ({ ...site })),
             lets_encrypt: this.isLetsEncryptEnabled,
             http2https: this.isHttpToHttpsEnabled,
+            ...adminData,
           },
           extra: {
             title: this.$t("settings.instance_configuration", {
@@ -625,6 +683,7 @@ export default {
     },
     configureModuleCompleted() {
       this.loading.configureModule = false;
+      this.adminPassword = "";
 
       // reload configuration
       this.getConfiguration();
